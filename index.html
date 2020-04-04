@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title> </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css">
+    <style>
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        margin: 0;
+    }
+
+    .main {
+        padding: 2em;
+        margin: 0;
+        display: -webkit-box;
+        display: -moz-box;
+        display: -ms-flexbox;
+        display: -webkit-flex;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    .hcontainer {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .vcontainer {
+        display: flex;
+        flex-direction: column;
+        padding: 1em;
+        font-size: 2em;
+        align-items: center;
+    }
+
+    .vele {
+        flex: 1;
+    }
+
+    #svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+    }
+
+    #line {
+        stroke-width: 2px;
+        stroke: rgb(0, 0, 0);
+    }
+    </style>
+</head>
+
+<body>
+    <div class="main" id="app">
+        <div class="hcontainer">
+            <p class="f1 mb1 pb1 mt0 pt0">Chord progression finder</p>
+        </div>
+        <div class="hcontainer">
+            <p class="f4 mb0 pb0">Key: </p>
+            <p>
+                <select v-model="keySong" class="pv2 f4 tc ml2">
+                    <option disabled value="">Choose:</option>
+                    <option>A</option>
+                    <option>Bb</option>
+                    <option>B</option>
+                    <option>C</option>
+                    <option>Db</option>
+                    <option>D</option>
+                    <option>Eb</option>
+                    <option>E</option>
+                    <option>F</option>
+                    <option>Gb</option>
+                    <option>G</option>
+                </select>
+            </p>
+        </div>
+        <div class="hcontainer">
+            <div class="vcontainer" v-for="(chordList,i) in chords">
+                <div class="vele link pointer mv1 grow moon-gray link hover-near-black" v-on:click="changeChord($event,i,j)" v-for="(c,j) in chordList" v-bind:id="''+ i+j">
+                    <span class="white bg-blue pa2 v-mid" v-if=c.active>{{transposeChord(c.chord)}}</span>
+                    <span class="hover-near-black v-mid" v-else>{{transposeChord(c.chord)}}</span>
+                    <span class="f6 v-mid" v-if="i==chords.length-1">({{c.probability}}%)</span>
+                </div>
+            </div>
+        </div>
+        <div class="hcontainer">
+            <p class="f4 lh-copy tl measure">
+                This website analyzed chord progressions from 4,000 songs to generate the most probable chord progression. The percentage (x.x%) next to each chord is the likelihood of the song progressing to that chord. Select any chord to get started.
+            </p>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="https://musclesoft.github.io/jquery-connections/jquery.connections.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js" integrity="sha256-T/f7Sju1ZfNNfBh7skWn0idlCBcI3RwdLSS4/I7NQKQ=" crossorigin="anonymous"></script>
+    <script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            chords: [],
+            chordIndex: {},
+            keySong: "C",
+        },
+        methods: {
+            transposeChord: function(chord) {
+                if (this.keySong == "C") {
+                    return chord;
+                }
+                var scale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+                var amount = scale.indexOf(this.keySong) - scale.indexOf("C");
+                console.log(amount);
+                return chord.replace(/[CDEFGAB]#?/g,
+                    function(match) {
+                        var i = (scale.indexOf(match) + amount) % scale.length;
+                        return scale[i < 0 ? i + scale.length : i];
+                    });
+            },
+            init: function(chordPattern) {
+                if (!(chordPattern in this.chordIndex)) {
+                    console.log("final pattern")
+                    return;
+                }
+
+                var chords = [];
+                for (var i = 0; i < this.chords.length; i++) {
+                    var hasActive = false;
+                    for (var j = 0; j < this.chords[i].length; j++) {
+                        if (this.chords[i][j].active) {
+                            hasActive = true;
+                            break
+                        }
+                    }
+                    if (hasActive) {
+                        chords.push(this.chords[i])
+                    }
+                }
+                this.chords = chords;
+
+                var items = Object.keys(this.chordIndex[chordPattern]).map(function(key) {
+                    return [key, app.chordIndex[chordPattern][key]];
+                });
+
+                items.sort(function(first, second) {
+                    return second[1] - first[1];
+                });
+
+                var chords = [];
+                for (var i = 0; i < items.length; i++) {
+                    var newChord = {
+                        chord: items[i][0],
+                        active: false,
+                        probability: items[i][1],
+                    };
+                    if (i % 2 == 0) {
+                        chords.push(newChord);
+                    } else {
+                        chords.unshift(newChord);
+                    }
+                    if (i > 9) break;
+                }
+                // if (this.chords.length == 0) {
+                //     chords.splice(5, 0, { chord: "C", active: false, probability: 8 })
+                //     chords.pop();
+                // }
+                this.chords.push(chords);
+            },
+            changeChord: function(event, measure, ci) {
+                console.log(measure, ci);
+
+                // toggle any activity
+                for (var i = 0; i < this.chords[measure].length; i++) {
+                    if (i == ci) {
+                        this.chords[measure][i].active = !this.chords[measure][i].active
+                    } else {
+                        this.chords[measure][i].active = false;
+                    }
+                }
+
+                // generate the chord pattern and look up next possible chords
+                var chordPattern = "";
+                for (var i = 0; i < this.chords.length; i++) {
+                    for (var j = 0; j < this.chords[i].length; j++) {
+                        if (this.chords[i][j].active) {
+                            chordPattern += " " + this.chords[i][j].chord;
+                        }
+                    }
+                }
+                chordPattern = chordPattern.trim();
+                console.log(chordPattern);
+                if (chordPattern == "") {
+                    chordPattern = "init";
+                }
+                this.init(chordPattern);
+            },
+            removeChord: function(event) {
+                console.log(event.srcElement.innerText);
+            }
+        },
+        mounted() {
+            axios
+                .get('/chordIndexInC.json')
+                .then(response => {
+                    this.chordIndex = response.data;
+                    console.log("mounted");
+                    this.init("init");
+                })
+        },
+    })
+    </script>
+</body>
+
+</html>
