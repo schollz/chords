@@ -209,7 +209,7 @@
         },
         mounted() {
             axios
-                .get('/chordIndexInC.json')
+                .get('./chordIndexInC.json')
                 .then(response => {
                     this.chordIndex = response.data;
                     console.log("mounted");
