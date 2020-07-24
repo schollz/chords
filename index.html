@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title> </title>
+    <title>Chord progression finder</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css">
     <style>
@@ -117,7 +117,7 @@
                 if (this.keySong == "C") {
                     return chord;
                 }
-                var scale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+                var scale = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
                 var amount = scale.indexOf(this.keySong) - scale.indexOf("C");
                 console.log(amount);
                 return chord.replace(/[CDEFGAB]#?/g,
