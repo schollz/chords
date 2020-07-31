@@ -59,12 +59,60 @@
         stroke: rgb(0, 0, 0);
     }
     </style>
+    <style>
+    .lds-ring {
+        display: inline-block;
+        position: relative;
+        width: 80px;
+        height: 80px;
+    }
+
+    .lds-ring div {
+        box-sizing: border-box;
+        display: block;
+        position: absolute;
+        width: 64px;
+        height: 64px;
+        margin: 8px;
+        border: 8px solid #000;
+        border-radius: 50%;
+        animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        border-color: #000 transparent transparent transparent;
+    }
+
+    .lds-ring div:nth-child(1) {
+        animation-delay: -0.45s;
+    }
+
+    .lds-ring div:nth-child(2) {
+        animation-delay: -0.3s;
+    }
+
+    .lds-ring div:nth-child(3) {
+        animation-delay: -0.15s;
+    }
+
+    @keyframes lds-ring {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+    </style>
 </head>
 
 <body>
     <div class="main" id="app">
         <div class="hcontainer">
             <p class="f1 mb1 pb1 mt0 pt0">Chord progression finder</p>
+        </div>
+        <div class="hcontainer">
+            <p class="f4 lh-copy tl measure">
+                <a href="https://schollz.com/blog/chords">I analyzed</a> over 1 million songs to generate the most probable chord progressions. The percentage (x.x%) next to each chord is the likelihood of the song progressing to that chord based on the previous chords. Select any chord to get started.
+            </p>
         </div>
         <div class="hcontainer">
             <p class="f4 mb0 pb0">Key: </p>
@@ -85,6 +133,17 @@
                 </select>
             </p>
         </div>
+        <div class="hcontainer pt4" v-if="chords.length==0">
+            <div class="lds-ring">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <div class="hcontainer pt2" v-if="chords.length==0">
+            <p align="center" class="tc f4 i">Loading data...</p>
+        </div>
         <div class="hcontainer">
             <div class="vcontainer" v-for="(chordList,i) in chords">
                 <div class="vele link pointer mv1 grow moon-gray link hover-near-black" v-on:click="changeChord($event,i,j)" v-for="(c,j) in chordList" v-bind:id="''+ i+j">
@@ -93,11 +152,6 @@
                     <span class="f6 v-mid" v-if="i==chords.length-1">({{c.probability}}%)</span>
                 </div>
             </div>
-        </div>
-        <div class="hcontainer">
-            <p class="f4 lh-copy tl measure">
-                This website analyzed chord progressions from 10,000 songs to generate the most probable chord progression. The percentage (x.x%) next to each chord is the likelihood of the song progressing to that chord. Select any chord to get started.
-            </p>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-latest.min.js"></script>
